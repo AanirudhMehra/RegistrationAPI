@@ -4,6 +4,7 @@ const express = require('express');
 const app = express();
 dotenv.config({ path: './config.env'});
 require('./db/conn');
+const port = process.env.PORT || 3000;
 // const USER = require('./model/userSchema');
 
 app.use(express.json());
@@ -20,6 +21,6 @@ app.get('/register', (req ,res) => {
     res.send(`Please sign up to continue.`);
 });
 
-app.listen(3000 , () => {
+app.listen(port , () => {
     console.log(`Server is running at port number 3000`);
 })
