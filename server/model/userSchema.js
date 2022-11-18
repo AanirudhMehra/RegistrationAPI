@@ -16,6 +16,23 @@ const userSchema = new mongoose.Schema({
     cpassword: {
         type: String,
         required:true
+    }, 
+    rollno: {
+        type:  Number,
+        required:true,
+        unique:true
+    },
+    year: {
+        type:Number,
+        required:true
+    },
+    branch: {
+        type:String,
+        required:true
+    },
+    gender:{
+        type:String,
+        required:true
     },
     tokens: [
         {
