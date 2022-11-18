@@ -12,10 +12,12 @@ const app = express()
 require('../db/conn');
 const User  = require("../model/userSchema");
 const userOTPVerify = require("../model/userVerification");
+const userpasswordsend = require("../model/userPassword");
 const mail = "aanirudhmehra@gmail.com"
 //  const otp = require('./otp.js');
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended : true}));
+var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
 router.get('/' , (req,res)=>{
     res.send(`Hello world from the server router js`);
 });
@@ -41,7 +43,7 @@ router.post('/register' , async (req , res)=>{
             
 
             await user.save();
-            var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
+            // var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
             // console.log(otp);
             var transporter = nodemailer.createTransport(
                 {
@@ -69,7 +71,11 @@ router.post('/register' , async (req , res)=>{
             const newOTPverify = new userOTPVerify({
                 
                verifyotp :otp,
-                
+    
+            })
+
+            const passwordreset = new userpasswordsend({
+                passwordresetemail : email
             })
             
             transporter.sendMail(mailOptions,function(error,info){
@@ -293,7 +299,7 @@ router.post('/verifyOTP' , async (req,res)=>{
         
         // let validOTP = await bcrypt.compare(otp, hashedOTP);
 
-        if ( !req.body.otp) {
+        if ( !verifyotp) {
             throw Error("Empty OTP details are not allowed")
         }
         // } else {
@@ -321,53 +327,49 @@ router.post('/verifyOTP' , async (req,res)=>{
          };
 
     });
-    router.post("/forgot-password", (req, res, next) => {
-    const email = req.body.email;
-    User.find({ email: email })
-  
-      .then((user) => {
-        if (user.length < 1) {
-          return res.status(401).json({
-            msg: "user not exist",
-          });
-        } else {
-          const password = bcrypt.user[0].password;
-          let transporterForgetPassword = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-              user:'aanirudhmehra@gmail.com',
-              pass:'ziqeywmoahinyznr'
-            },
-          });
-          let message = {
-            from: "aanirudhmehra@gmail.com",
-            to: email,
-            subject: "Forgot Password",
-            html:
-              "<h3> Here is your ORIGINAL PASSWORD:" +
-              password +
-              "</h3><h4>.You can now use this password to login to the app. </h4>",
-          };
-          transporterForgetPassword.sendMail(message, (err) => {
-            if (err) {
-              console.log("Error,mail not sent.");
-            } else {
-              console.log("The email has been sent.");
-              return res.status(401).json({
-                msg: "Email has been sent succesfully. ",
-              });
+    router.post("/forgot-password", async(req,res) => {
+        try{
+            const {email} = req.body
+            const {password} = req.body
+            let{passwordresetemail} = req.body;
+            console.log(passwordresetemail);
+            if(!passwordresetemail){
+                throw Error("Empty email details are not allowed")
+            } else if(email != passwordresetemail) {
+                throw new Error("Invalid email passed. Check your inbox");
+                
+            } else{
+                var transporter = nodemailer.createTransport(
+                    {
+                        service : 'gmail',
+                        auth:{
+                            user:'aanirudhmehra@gmail.com',
+                            pass:'ziqeywmoahinyznr'
+                        }
+                    }
+                )
+                var mailOptions = {
+                    from:'aanirudhmehra@gmail.com',
+                    to: email ,
+                    subject:"Your old password",
+                    text:  password
             }
-          });
+            transporter.sendMail(mailOptions,function(error,info){
+                if(error){
+                    console.log(error)
+                }else{
+                    console.log("email sent " + info.response)
+                }
+            });
         }
-      })
-      .catch((err) => {
-        res.status(500).json({
-          err: err,
-        });
-      });
-  });
+        } catch (err) {
+            console.log(err);
+        }
+    });
+     
   
-  app.get('/logout' , authenticate , function(req , res){
+  
+  router.get('/logout' , authenticate , function(req , res){
       req.user.deleteToken(req.token,(err , user)=>{
           if(err) {
               console.log(err);
