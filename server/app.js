@@ -21,6 +21,10 @@ app.get('/register', (req ,res) => {
     res.send(`Please sign up to continue.`);
 });
 
+app.get('/verifyOTP', (req ,res) => {
+    res.send(`Please sign up to continue.`);
+});
+
 app.listen(port , () => {
     console.log(`Server is running at port number 3000`);
 })
