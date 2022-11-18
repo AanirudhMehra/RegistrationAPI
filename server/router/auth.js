@@ -7,14 +7,15 @@ const otpGenerator = require('otp-generator');
 var bodyParser = require('body-parser');
 const authenticate = require("../middleware/authenticate");
 const app = express()
-app.use(bodyParser.urlencoded({ extended : true}));
+
 
 require('../db/conn');
 const User  = require("../model/userSchema");
 const userOTPVerify = require("../model/userVerification");
 const mail = "aanirudhmehra@gmail.com"
 //  const otp = require('./otp.js');
-
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended : true}));
 router.get('/' , (req,res)=>{
     res.send(`Hello world from the server router js`);
 });
@@ -40,78 +41,52 @@ router.post('/register' , async (req , res)=>{
             
 
             await user.save();
-
+            var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
+            // console.log(otp);
+            var transporter = nodemailer.createTransport(
+                {
+                    service : 'gmail',
+                    auth:{
+                        user:'aanirudhmehra@gmail.com',
+                        pass:'ziqeywmoahinyznr'
+                    }
+                }
+            )
+            // const { email , password , cpassword } = req.body;
+            // const userExist =  User.findOne({ email:email })
+            var mailOptions = {
+                from:'aanirudhmehra@gmail.com',
+                to: email ,
+                subject:"Verify your Email",
+                text:  otp
+            } ; 
+            
+            // const saltRounds = 10;
+            
+            // const hashedOTP =  bcrypt.hash(otp , saltRounds);
+            
+            
+            const newOTPverify = new userOTPVerify({
+                
+               verifyotp :otp,
+                
+            })
+            
+            transporter.sendMail(mailOptions,function(error,info){
+                if(error){
+                    console.log(error)
+                }else{
+                    console.log("email sent " + info.response)
+                }
+            });
+            
+            
+          
             res.status(201).json({ message : " user registered successfully"});
 
-            await((result) => {
-                sendVerificationOTP(result,res)
-            })
-        }
-            
-  
-        
 
-        
 
-    
-
-    } catch(err) {
-        console.log(err);
-
-    }
-
-    
-
-}); 
-
-var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
-var sendVerificationOTP = async({_id, email}, res)=>{
-    try{
-        var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
-        var transporter = nodemailer.createTransport(
-            {
-                service : 'gmail',
-                auth:{
-                    user:'aanirudhmehra@gmail.com',
-                    pass:'ziqeywmoahinyznr'
-                }
-            }
-        )
-        
-        var mailOptions = {
-            from:'aanirudhmehra@gmail.com',
-            to: req.body.email,
-            subject:"Verify your Email",
-            text:  otp
-        } ; 
-        
-        const saltrounds = 10;
-        
-        const hashedOTP = await bcrypt.hash(otp , saltRounds);
-        
-        const newOTPverify = await new userOTPVerify({
-            userID: _id ,
-            otp: hashedOTP,
-            createdAt : Date.now(),
-            expiresAt : Date.now() + 3600000
-        });
-
-        await newOTPverify.save();
-        
-        await transporter.sendMail(mailOptions,function(error,info){
-            if(error){
-                console.log(error)
-            }else{
-                console.log("email sent " + info.response)
-            }
-        })
-        
-
-    } catch (error) {
-        console.log(error);
-    }
-}
-// var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
+//             var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
 // var transporter = nodemailer.createTransport(
 //     {
 //         service : 'gmail',
@@ -147,6 +122,125 @@ var sendVerificationOTP = async({_id, email}, res)=>{
 //         console.log("email sent " + info.response)
 //     }
 // })
+
+
+            // await((result) => {
+            //     sendVerificationOTP(result,res);
+            //     console.log("Hello")
+            // })
+        }
+            
+  
+        
+
+        
+
+    
+
+    } catch(err) {
+        console.log(err);
+
+    }
+
+    
+
+}); 
+
+// // var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
+// const email = req.body.email 
+// User.find({ email: email });
+
+// User.then((user) => {
+//     console.log(email);
+    
+//       });
+
+
+
+// var sendVerificationOTP = async({_id, email}, res)=>{
+//     try{
+//         var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
+//         var transporter = nodemailer.createTransport(
+//             {
+//                 service : 'gmail',
+//                 auth:{
+//                     user:'aanirudhmehra@gmail.com',
+//                     pass:'ziqeywmoahinyznr'
+//                 }
+//             }
+//         )
+        
+//         var mailOptions = {
+//             from:'aanirudhmehra@gmail.com',
+//             to: req.body.email,
+//             subject:"Verify your Email",
+//             text:  otp
+//         } ; 
+        
+//         const saltrounds = 10;
+        
+//         const hashedOTP = await bcrypt.hash(otp , saltRounds);
+        
+//         const newOTPverify = await new userOTPVerify({
+//             userID: _id ,
+//             otp: hashedOTP,
+//             createdAt : Date.now(),
+//             expiresAt : Date.now() + 3600000
+//         });
+
+//         await newOTPverify.save();
+        
+//         await transporter.sendMail(mailOptions,function(error,info){
+//             if(error){
+//                 console.log(error)
+//             }else{
+//                 console.log("email sent " + info.response)
+//             }
+//         })
+        
+
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
+// var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
+
+// var transporter = nodemailer.createTransport(
+//     {
+//         service : 'gmail',
+//         auth:{
+//             user:'aanirudhmehra@gmail.com',
+//             pass:'ziqeywmoahinyznr'
+//         }
+//     }
+// )
+// // const { email , password , cpassword } = req.body;
+// const userExist =  User.findOne({ email:email })
+// var mailOptions = {
+//     from:'aanirudhmehra@gmail.com',
+//     to: User.email,
+//     subject:"Verify your Email",
+//     text:  otp
+// } ; 
+
+// const saltRounds = 10;
+
+// const hashedOTP =  bcrypt.hash(otp , saltRounds);
+
+// const newOTPverify = new userOTPVerify({
+//     userID: "_id" ,
+//     otp: hashedOTP,
+//     createdAt : Date.now(),
+//     expiresAt : Date.now() + 3600000
+// })
+
+// transporter.sendMail(mailOptions,function(error,info){
+//     if(error){
+//         console.log(error)
+//     }else{
+//         console.log("email sent " + info.response)
+//     }
+// });
 
 
 
@@ -194,55 +288,98 @@ try{
 
 router.post('/verifyOTP' , async (req,res)=>{
     try{
-        let {userID ,otp } = req.body;
-        if (!userID || !otp) {
+        
+        let {verifyotp } = req.body;
+        
+        // let validOTP = await bcrypt.compare(otp, hashedOTP);
+
+        if ( !req.body.otp) {
             throw Error("Empty OTP details are not allowed")
-        } else {t
-            const records = await userOTPVerify.find({
-                userID,
-            });
-            if (records.length <=0 ){
-                throw new Error("Account record doesnt exiat or has been verified already. Please log in");
-            } else {
-                const validOTP = await bcrypt.compare(otp, hashedOTP);
-                if (!validOTP) {
-                    throw new Error("Invalid code passed. Chcek your inbox");
-                } else {
-                    await user.updateOne({
-                        _id: userID
-                    }, {
-                        verified: true
-                    });
-
-                    userOTPVerify.deleteMany({userID});
-                    res.json({
-                        status:"Email has been verified"
-                    })
-                }
-            }
         }
-    } catch (error) {
-        res.json({
-            status: "FAILED",
+        // } else {
+        //     const records = await userOTPVerify.find({
+        //         // userID,
+                
+        //     });
+        //     if (records.length <=0 ){
+        //         throw new Error("Account record doesnt exiat or has been verified already. Please log in");
+        //     } else {
+                // const validOTP = await bcrypt.compare(otp, hashedOTP);
+                else if (otp != verifyotp){  
+                    throw new Error("Invalid code passed. Check your inbox");
+                } else {
+                        
+                            res.status(401).json({
+                                msg: "You are fully verified",
+                   });
+                    
+                } 
+            }
+         catch (error) {
+        
+        console.log(error);
+         };
 
-        })
-    }
-});
-
-app.get('/logout' , authenticate , function(req , res){
-    req.user.deleteToken(req.token,(err , user)=>{
-        if(err) {
-            console.log(err);
-            return res.status(400).send(err);
-            res.sendStatus(200);}
-        })
     });
-   
+    router.post("/forgot-password", (req, res, next) => {
+    const email = req.body.email;
+    User.find({ email: email })
+  
+      .then((user) => {
+        if (user.length < 1) {
+          return res.status(401).json({
+            msg: "user not exist",
+          });
+        } else {
+          const password = bcrypt.user[0].password;
+          let transporterForgetPassword = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user:'aanirudhmehra@gmail.com',
+              pass:'ziqeywmoahinyznr'
+            },
+          });
+          let message = {
+            from: "aanirudhmehra@gmail.com",
+            to: email,
+            subject: "Forgot Password",
+            html:
+              "<h3> Here is your ORIGINAL PASSWORD:" +
+              password +
+              "</h3><h4>.You can now use this password to login to the app. </h4>",
+          };
+          transporterForgetPassword.sendMail(message, (err) => {
+            if (err) {
+              console.log("Error,mail not sent.");
+            } else {
+              console.log("The email has been sent.");
+              return res.status(401).json({
+                msg: "Email has been sent succesfully. ",
+              });
+            }
+          });
+        }
+      })
+      .catch((err) => {
+        res.status(500).json({
+          err: err,
+        });
+      });
+  });
+  
+  app.get('/logout' , authenticate , function(req , res){
+      req.user.deleteToken(req.token,(err , user)=>{
+          if(err) {
+              console.log(err);
+              return res.status(400).send(err);
+              res.sendStatus(200);}
+          })
+      });
+     
+  
+  console.log("Reached the end of the program");
+  
+  
+  module.exports = router;
 
-// router.get('/about' ,authenticate , (req , res)=>{
-//     console.log("Hello my About");
-//     res.send("Hello About world from the server");
 // });
-
-
-module.exports = router;
