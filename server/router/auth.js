@@ -83,9 +83,9 @@ router.post('/register' , async (req , res)=>{
     
             })
 
-            const passwordreset = new userpasswordsend({
-                passwordresetemail : email
-            })
+            // const passwordreset = new userpasswordsend({
+            //     passwordresetemail : email
+            // })
             
             transporter.sendMail(mailOptions,function(error,info){
                 if(error){
@@ -338,8 +338,11 @@ router.post('/verifyOTP' , async (req,res)=>{
     });
     router.post("/forgot-password", async(req,res) => {
         try{
-            const {email} = req.body
-            const {password} = req.body
+            const {email} = req.body;
+            const {password} = req.body;
+            const passwordreset = new userpasswordsend({
+                passwordresetemail : email
+            })
             let{passwordresetemail} = req.body;
             console.log(passwordresetemail);
             if(!passwordresetemail){
