@@ -7,6 +7,8 @@ const otpGenerator = require('otp-generator');
 var bodyParser = require('body-parser');
 const authenticate = require("../middleware/authenticate");
 const app = express()
+var cors = require('cors');
+
 
 
 require('../db/conn');
@@ -16,6 +18,7 @@ const userpasswordsend = require("../model/userPassword");
 const mail = "aanirudhmehra@gmail.com"
 //  const otp = require('./otp.js');
 app.use(express.json());
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended : true}));
 var otp = otpGenerator.generate(6,{upperCaseAlphabets: false , specialChars: false});
 router.get('/' , (req,res)=>{
